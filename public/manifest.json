@@ -1,0 +1,29 @@
+{
+  "name": "ميزانيتي - تتبع المصاريف والميزانية الشخصية",
+  "short_name": "ميزانيتي",
+  "description": "تطبيق عربي لإدارة المصاريف الشخصية والميزانية بالدينار الجزائري DZD",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0A0F1E",
+  "theme_color": "#0A0F1E",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon-192.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
+}
