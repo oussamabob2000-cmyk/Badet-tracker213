@@ -1,0 +1,6 @@
+{
+  "name": "ميزانيتي - تتبع المصاريف والميزانية",
+  "description": "تطبيق ويب تقدمي (PWA) عربي لإدارة المصاريف الشخصية والميزانية بالدينار الجزائري.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
