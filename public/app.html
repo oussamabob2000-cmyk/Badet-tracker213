@@ -867,19 +867,22 @@
         <span class="keypad-currency">د.ج</span>
       </div>
 
-      <!-- Quick Note & Category Select -->
+      <!-- Quick Note, Date & Category Select -->
       <div class="keypad-options">
-        <select id="keypad-category" class="select-field">
-          <option value="">اختر الفئة (اختياري - افتراضي: متفرقات)</option>
-          <option value="food">🛒 مواد غذائية</option>
-          <option value="tobacco">🚬 تدخين</option>
-          <option value="subscriptions">📱 اشتراكات</option>
-          <option value="transport">🚗 مواصلات</option>
-          <option value="health">💊 صحة</option>
-          <option value="education">📚 تعليم</option>
-          <option value="entertainment">🎮 ترفيه</option>
-          <option value="misc">📦 متفرقات</option>
-        </select>
+        <div style="display: flex; gap: 8px;">
+          <input type="date" id="keypad-date" class="input-field" style="flex: 1;" title="تاريخ المصروف">
+          <select id="keypad-category" class="select-field" style="flex: 1.2;">
+            <option value="">اختر الفئة (افتراضي: متفرقات)</option>
+            <option value="food">🛒 مواد غذائية</option>
+            <option value="tobacco">🚬 تدخين</option>
+            <option value="subscriptions">📱 اشتراكات</option>
+            <option value="transport">🚗 مواصلات</option>
+            <option value="health">💊 صحة</option>
+            <option value="education">📚 تعليم</option>
+            <option value="entertainment">🎮 ترفيه</option>
+            <option value="misc">📦 متفرقات</option>
+          </select>
+        </div>
         
         <input type="text" id="keypad-note" class="input-field" placeholder="ملاحظة قصيرة (مثال: قهوة، بنزين... اختياري)">
       </div>
@@ -1146,10 +1149,14 @@
         <input type="number" id="income-amount-input" class="input-field" placeholder="مثال: 60000">
       </div>
       <div class="form-group">
-        <label class="form-label">مصدر الدخل / ملاحظة</label>
-        <input type="text" id="income-note-input" class="input-field" placeholder="مثال: راتب شهر جويلية">
+        <label class="form-label">تاريخ الاستلام / الراتب</label>
+        <input type="date" id="income-date-input" class="input-field">
       </div>
-      <button class="btn btn-primary" style="width: 100%;" onclick="saveIncome()">إضافة للميزانية</button>
+      <div class="form-group">
+        <label class="form-label">مصدر الدخل / ملاحظة</label>
+        <input type="text" id="income-note-input" class="input-field" placeholder="مثال: راتب شهر أوت، منحة...">
+      </div>
+      <button class="btn btn-primary" style="width: 100%;" onclick="saveIncome()">إضافة للميزانية ✓</button>
     </div>
   </div>
 
@@ -1162,24 +1169,32 @@
       </div>
       <div class="form-group">
         <label class="form-label">نوع الدين</label>
-        <select id="debt-type-select" class="select-field">
-          <option value="i_owe">دين عليّ (أناني سالس للناس)</option>
-          <option value="owed_to_me">دين لي (الناس ساليني)</option>
+        <select id="debt-type-select" class="select-field" onchange="updateDebtModalLabel()">
+          <option value="i_owe">دين عليّ (استلفت مبلغ من شخص)</option>
+          <option value="owed_to_me">دين لي (أقرضت / أعطيت مبلغ لشخص)</option>
         </select>
       </div>
       <div class="form-group">
-        <label class="form-label">اسم الشخص</label>
-        <input type="text" id="debt-person-input" class="input-field" placeholder="اسم الشخص">
+        <label class="form-label">اسم الشخص / الجهة</label>
+        <input type="text" id="debt-person-input" class="input-field" placeholder="مثال: محمد، علي...">
       </div>
       <div class="form-group">
         <label class="form-label">المبلغ (د.ج)</label>
         <input type="number" id="debt-amount-input" class="input-field" placeholder="المبلغ">
       </div>
       <div class="form-group">
-        <label class="form-label">ملاحظات (اختياري)</label>
-        <input type="text" id="debt-notes-input" class="input-field" placeholder="ملاحظة">
+        <label class="form-label">تاريخ الدين / الاستلاف</label>
+        <input type="date" id="debt-date-input" class="input-field">
       </div>
-      <button class="btn btn-primary" style="width: 100%;" onclick="saveDebt()">حفظ الدين</button>
+      <div class="form-group">
+        <label class="form-label">ملاحظات (اختياري)</label>
+        <input type="text" id="debt-notes-input" class="input-field" placeholder="ملاحظة قصيرة">
+      </div>
+      <div class="form-group" style="display: flex; align-items: center; gap: 10px; margin-bottom: 18px; font-size: 0.85rem; color: var(--text-main); background: rgba(255,255,255,0.04); padding: 10px; border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,0.08);">
+        <input type="checkbox" id="debt-affect-budget" checked style="width: 18px; height: 18px; accent-color: #2ECC71; cursor: pointer;">
+        <label for="debt-affect-budget" style="cursor: pointer; line-height: 1.3;" id="debt-affect-label">إضافة المبلغ تلقائياً إلى الرصيد المتوفر (+ دخل)</label>
+      </div>
+      <button class="btn btn-primary" style="width: 100%;" onclick="saveDebt()">حفظ الدين ✓</button>
     </div>
   </div>
 
@@ -1200,16 +1215,21 @@
         <input type="number" id="settle-debt-amount-input" class="input-field" placeholder="أدخل المبلغ">
       </div>
 
+      <div class="form-group">
+        <label class="form-label">تاريخ التسوية</label>
+        <input type="date" id="settle-debt-date-input" class="input-field">
+      </div>
+
       <div class="form-group" style="display: flex; gap: 8px; margin-bottom: 14px;">
         <button type="button" class="btn btn-secondary btn-sm" style="flex: 1;" onclick="setSettleFullAmount()">تسوية كل المتبقي بالكامل</button>
       </div>
 
-      <div class="form-group" style="display: flex; align-items: center; gap: 10px; margin-bottom: 18px; font-size: 0.85rem; color: var(--text-main);">
+      <div class="form-group" style="display: flex; align-items: center; gap: 10px; margin-bottom: 18px; font-size: 0.85rem; color: var(--text-main); background: rgba(255,255,255,0.04); padding: 10px; border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,0.08);">
         <input type="checkbox" id="settle-debt-affect-budget" checked style="width: 18px; height: 18px; accent-color: #2ECC71; cursor: pointer;">
-        <label for="settle-debt-affect-budget" style="cursor: pointer;" id="settle-debt-affect-label">خصم هذا المبلغ تلقائياً من الميزانية (الرصيد المتوفر)</label>
+        <label for="settle-debt-affect-budget" style="cursor: pointer; line-height: 1.3;" id="settle-debt-affect-label">خصم هذا المبلغ تلقائياً من الميزانية (الرصيد المتوفر)</label>
       </div>
 
-      <button class="btn btn-primary" style="width: 100%;" onclick="confirmSettleDebt()">تأكيد عملية التسوية</button>
+      <button class="btn btn-primary" style="width: 100%;" onclick="confirmSettleDebt()">تأكيد عملية التسوية ✓</button>
     </div>
   </div>
 
@@ -1411,6 +1431,42 @@
       }
     }
 
+    // --- NUMBER & DATE FORMATTING UTILITIES ---
+    function formatNumber(num) {
+      if (num === null || num === undefined || isNaN(num)) return '0';
+      return Math.round(num).toLocaleString('en-US');
+    }
+
+    function formatDate(isoOrDateStr) {
+      if (!isoOrDateStr) return '';
+      const d = new Date(isoOrDateStr);
+      if (isNaN(d.getTime())) return isoOrDateStr;
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      return `${yyyy}/${mm}/${dd}`;
+    }
+
+    function formatDateTime(isoOrDateStr) {
+      if (!isoOrDateStr) return '';
+      const d = new Date(isoOrDateStr);
+      if (isNaN(d.getTime())) return isoOrDateStr;
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      const hh = String(d.getHours()).padStart(2, '0');
+      const min = String(d.getMinutes()).padStart(2, '0');
+      return `${yyyy}/${mm}/${dd} - ${hh}:${min}`;
+    }
+
+    function setDefaultDateInputs() {
+      const today = new Date().toISOString().slice(0, 10);
+      ['keypad-date', 'income-date-input', 'debt-date-input', 'settle-debt-date-input'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el && !el.value) el.value = today;
+      });
+    }
+
     // --- KEYPAD CONTROLLER ---
     let keypadValue = '0';
 
@@ -1433,7 +1489,7 @@
 
     function updateKeypadDisplay() {
       const num = parseInt(keypadValue, 10) || 0;
-      document.getElementById('keypad-input').innerText = num.toLocaleString('ar-EG');
+      document.getElementById('keypad-input').innerText = formatNumber(num);
     }
 
     function confirmExpense() {
@@ -1445,6 +1501,8 @@
 
       const catId = document.getElementById('keypad-category').value || 'misc';
       const note = document.getElementById('keypad-note').value.trim() || '';
+      const dateVal = document.getElementById('keypad-date').value;
+      const txDate = dateVal ? new Date(dateVal + 'T' + new Date().toTimeString().slice(0,8)).toISOString() : new Date().toISOString();
 
       const categoryObj = appState.categories.find(c => c.id === catId);
       const catCap = categoryObj ? categoryObj.cap : 0;
@@ -1458,7 +1516,7 @@
       // Check category cap warning
       if (catCap > 0 && (catSpent + amount) > catCap) {
         const catName = categoryObj ? categoryObj.name : '';
-        alert(`⚠️ تنبيه: إدخال هذا المصروف سينقل فئة (${catName}) لتجاوز الحد الأقصى المخصص لها (${catCap.toLocaleString()} د.ج). تم السماح بالعملية.`);
+        alert(`⚠️ تنبيه: إدخال هذا المصروف سينقل فئة (${catName}) لتجاوز الحد الأقصى المخصص لها (${formatNumber(catCap)} د.ج). تم السماح بالعملية.`);
       }
 
       const tx = {
@@ -1467,7 +1525,7 @@
         type: 'expense',
         categoryId: catId,
         note: note,
-        timestamp: new Date().toISOString()
+        timestamp: txDate
       };
 
       appState.transactions.unshift(tx);
@@ -1481,7 +1539,7 @@
       document.getElementById('keypad-category').value = '';
 
       // Show Undo Toast Notification for 5 seconds
-      showToast(`تم تسجيل مصروفبقيمة ${amount.toLocaleString()} د.ج`);
+      showToast(`تم تسجيل مصروف بقيمة ${formatNumber(amount)} د.ج`);
     }
 
     function showToast(message) {
@@ -1545,20 +1603,9 @@
       });
     }
 
-    function formatRelativeTime(isoString) {
-      const date = new Date(isoString);
-      const now = new Date();
-      const diffSec = Math.floor((now - date) / 1000);
-
-      if (diffSec < 60) return 'الآن';
-      if (diffSec < 3600) return `منذ ${Math.floor(diffSec / 60)} دقيقة`;
-      if (diffSec < 86400) return `منذ ${Math.floor(diffSec / 3600)} ساعة`;
-      if (diffSec < 172800) return 'أمس';
-      return date.toLocaleDateString('ar-EG', { day: 'numeric', month: 'short' });
-    }
-
     // --- UI RENDERING ---
     function refreshUI() {
+      setDefaultDateInputs();
       renderDashboard();
       renderTransactions();
       renderCategories();
@@ -1577,15 +1624,12 @@
         .filter(t => t.type === 'expense')
         .reduce((sum, t) => sum + t.amount, 0);
 
-      // Monthly fixed expenses paid/unpaid
-      const fixedTotal = appState.fixedExpenses.reduce((sum, f) => sum + f.amount, 0);
-
       const totalBudget = (appState.settings.monthlyBudget || 0) + (appState.settings.incomeTotal || 0);
       const remaining = totalBudget - totalSpent;
 
-      document.getElementById('dash-total-budget').innerText = totalBudget.toLocaleString() + ' د.ج';
-      document.getElementById('dash-total-spent').innerText = totalSpent.toLocaleString() + ' د.ج';
-      document.getElementById('dash-remaining').innerText = remaining.toLocaleString() + ' د.ج';
+      document.getElementById('dash-total-budget').innerText = formatNumber(totalBudget) + ' د.ج';
+      document.getElementById('dash-total-spent').innerText = formatNumber(totalSpent) + ' د.ج';
+      document.getElementById('dash-remaining').innerText = formatNumber(remaining) + ' د.ج';
 
       // Progress Bar
       const percentage = totalBudget > 0 ? Math.min(100, Math.round((totalSpent / totalBudget) * 100)) : 0;
@@ -1603,7 +1647,7 @@
       // Daily Average
       const dayOfMonth = now.getDate();
       const dailyAvg = dayOfMonth > 0 ? Math.round(totalSpent / dayOfMonth) : 0;
-      document.getElementById('dash-daily-avg').innerText = dailyAvg.toLocaleString() + ' د.ج';
+      document.getElementById('dash-daily-avg').innerText = formatNumber(dailyAvg) + ' د.ج';
 
       // Overspend Alert
       const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
@@ -1613,7 +1657,7 @@
       if (projectedTotal > totalBudget && totalBudget > 0) {
         alertBanner.style.display = 'flex';
         document.getElementById('dash-alert-text').innerText = 
-          `تنبيه: بمتوسط صرف ${dailyAvg.toLocaleString()} د.ج/يوم، يتوقع أن تصل مصاريفك إلى ${projectedTotal.toLocaleString()} د.ج وتتجاوز الميزانية!`;
+          `تنبيه: بمتوسط صرف ${formatNumber(dailyAvg)} د.ج/يوم، يتوقع أن تصل مصاريفك إلى ${formatNumber(projectedTotal)} د.ج وتتجاوز الميزانية!`;
       } else {
         alertBanner.style.display = 'none';
       }
@@ -1641,7 +1685,7 @@
         container.innerHTML = `
           <div class="empty-state">
             <div class="empty-icon">💸</div>
-            <div>لا توجد مصاريف مسجلة حتى الآن</div>
+            <div>لا توجد مصاريف أو عمليات مسجلة حتى الآن</div>
           </div>
         `;
         return;
@@ -1655,10 +1699,10 @@
             <div style="font-size: 1.4rem;">${isIncome ? '💰' : cat.icon}</div>
             <div class="list-item-info">
               <div class="list-item-title">${isIncome ? 'دخل / استلام' : cat.name} ${t.note ? `<span style="font-size:0.8rem; font-weight:normal; color:var(--text-muted);">- ${t.note}</span>` : ''}</div>
-              <div class="list-item-subtitle">${formatRelativeTime(t.timestamp)}</div>
+              <div class="list-item-subtitle">📅 ${formatDateTime(t.timestamp)}</div>
             </div>
             <div class="list-item-amount" style="color: ${isIncome ? 'var(--primary)' : 'var(--danger)'}">
-              ${isIncome ? '+' : '-'}${t.amount.toLocaleString()} د.ج
+              ${isIncome ? '+' : '-'}${formatNumber(t.amount)} د.ج
             </div>
             <button class="btn btn-secondary btn-sm" onclick="deleteTransaction(${t.id})" style="padding: 4px 8px; font-size: 0.75rem;">🗑️</button>
           </div>
@@ -1705,8 +1749,8 @@
               <div class="progress-bar-fill" style="width: ${percentage}%; background: ${statusColor};"></div>
             </div>
             <div class="category-amounts">
-              <span>المصروف: ${spent.toLocaleString()} د.ج</span>
-              <span>الحد: ${cat.cap.toLocaleString()} د.ج</span>
+              <span>المصروف: ${formatNumber(spent)} د.ج</span>
+              <span>الحد: ${formatNumber(cat.cap)} د.ج</span>
             </div>
           </div>
         `;
@@ -1760,18 +1804,18 @@
                         : '<span class="badge-dzd" style="background:rgba(239, 68, 68, 0.12); color:var(--danger); font-size:0.75rem; padding: 2px 8px;">غير مسدد</span>')
                   }
                 </div>
-                <div class="list-item-subtitle">${d.notes || 'بدون ملاحظات'} • ${new Date(d.date).toLocaleDateString('ar-EG')}</div>
+                <div class="list-item-subtitle">${d.notes ? d.notes + ' • ' : ''}📅 تاريخ الدين: ${formatDate(d.date)}</div>
               </div>
               <div class="list-item-amount" style="text-align: left; color: ${isOwe ? 'var(--danger)' : 'var(--primary)'}">
-                ${d.amount.toLocaleString()} د.ج
+                ${formatNumber(d.amount)} د.ج
               </div>
             </div>
 
             ${(isPartiallyPaid || isSettled) ? `
               <div style="background: rgba(255,255,255,0.03); padding: 8px 12px; border-radius: var(--radius-sm); font-size: 0.8rem; border: 1px solid rgba(255,255,255,0.06);">
                 <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-                  <span style="color: var(--text-muted)">المسدد: ${paidAmount.toLocaleString()} د.ج</span>
-                  <span style="font-weight: 700; color: ${isSettled ? 'var(--primary)' : 'var(--warning)'}">المتبقي: ${remainingAmount.toLocaleString()} د.ج</span>
+                  <span style="color: var(--text-muted)">المسدد: ${formatNumber(paidAmount)} د.ج</span>
+                  <span style="font-weight: 700; color: ${isSettled ? 'var(--primary)' : 'var(--warning)'}">المتبقي: ${formatNumber(remainingAmount)} د.ج</span>
                 </div>
                 <div class="progress-bar-bg" style="height: 5px;">
                   <div class="progress-bar-fill" style="width: ${percent}%; background: ${isSettled ? 'var(--primary)' : 'var(--warning)'};"></div>
@@ -1806,26 +1850,29 @@
         <div style="font-weight: 700; font-size: 1rem; margin-bottom: 6px; color: var(--text-main);">الشخص: ${d.personName}</div>
         <div style="display: flex; justify-content: space-between; color: var(--text-muted); font-size: 0.85rem;">
           <span>المبلغ الكلي للدين:</span>
-          <span>${d.amount.toLocaleString()} د.ج</span>
+          <span>${formatNumber(d.amount)} د.ج</span>
         </div>
         <div style="display: flex; justify-content: space-between; color: var(--text-muted); font-size: 0.85rem; margin-top: 2px;">
           <span>المسدد سابقاً:</span>
-          <span>${paidAmount.toLocaleString()} د.ج</span>
+          <span>${formatNumber(paidAmount)} د.ج</span>
         </div>
         <div style="margin-top: 8px; padding-top: 8px; border-top: 1px dashed rgba(255,255,255,0.12); display: flex; justify-content: space-between; font-weight: 700; color: ${d.type === 'i_owe' ? '#F87171' : 'var(--primary)'};">
           <span>المبلغ المتبقي للتسوية:</span>
-          <span>${remainingAmount.toLocaleString()} د.ج</span>
+          <span>${formatNumber(remainingAmount)} د.ج</span>
         </div>
       `;
 
       const inputField = document.getElementById('settle-debt-amount-input');
       inputField.value = remainingAmount;
 
+      const dateField = document.getElementById('settle-debt-date-input');
+      if (dateField) dateField.value = new Date().toISOString().slice(0, 10);
+
       const affectLabel = document.getElementById('settle-debt-affect-label');
       if (d.type === 'i_owe') {
-        affectLabel.innerText = 'خصم هذا المبلغ من الميزانية (الرصيد المتوفر كـ مصروف)';
+        affectLabel.innerText = 'خصم هذا المبلغ من الميزانية (تسديد مصروف من الرصيد المتوفر)';
       } else {
-        affectLabel.innerText = 'إضافة هذا المبلغ للميزانية (الرصيد المتوفر كـ دخل)';
+        affectLabel.innerText = 'إضافة هذا المبلغ للميزانية (تحصيل دخل إلى الرصيد المتوفر)';
       }
 
       document.getElementById('settle-debt-affect-budget').checked = true;
@@ -1845,6 +1892,8 @@
 
       const settleAmount = parseInt(document.getElementById('settle-debt-amount-input').value, 10);
       const affectBudget = document.getElementById('settle-debt-affect-budget').checked;
+      const dateVal = document.getElementById('settle-debt-date-input').value;
+      const settleDate = dateVal ? new Date(dateVal + 'T' + new Date().toTimeString().slice(0,8)).toISOString() : new Date().toISOString();
 
       const paidAmount = currentSettleDebt.paidAmount || (currentSettleDebt.status === 'settled' ? currentSettleDebt.amount : 0);
       const remainingAmount = Math.max(0, currentSettleDebt.amount - paidAmount);
@@ -1855,7 +1904,7 @@
       }
 
       if (settleAmount > remainingAmount) {
-        alert(`تنبيه: المبلغ المدخل (${settleAmount.toLocaleString()} د.ج) أكبر من الدين المتبقي (${remainingAmount.toLocaleString()} د.ج)`);
+        alert(`تنبيه: المبلغ المدخل (${formatNumber(settleAmount)} د.ج) أكبر من الدين المتبقي (${formatNumber(remainingAmount)} د.ج)`);
         return;
       }
 
@@ -1870,32 +1919,32 @@
       // Record in Budget / Available Balance
       if (affectBudget) {
         if (currentSettleDebt.type === 'i_owe') {
-          // Money paid out -> Expense transaction -> reduces remaining budget
+          // Repaying money I owed -> Expense transaction -> reduces remaining budget
           appState.transactions.unshift({
             id: Date.now(),
             amount: settleAmount,
             type: 'expense',
             categoryId: 'misc',
             note: `تسديد دين لـ: ${currentSettleDebt.personName}`,
-            timestamp: new Date().toISOString()
+            timestamp: settleDate
           });
         } else {
-          // Money received -> Income -> increases available balance
+          // Collecting money owed to me -> Income -> increases available balance
           appState.settings.incomeTotal = (appState.settings.incomeTotal || 0) + settleAmount;
           appState.transactions.unshift({
             id: Date.now(),
             amount: settleAmount,
             type: 'income',
             categoryId: 'misc',
-            note: `استلام دين من: ${currentSettleDebt.personName}`,
-            timestamp: new Date().toISOString()
+            note: `استلام/تحصيل دين من: ${currentSettleDebt.personName}`,
+            timestamp: settleDate
           });
         }
       }
 
       saveState();
       closeModal('modal-settle-debt');
-      showToast(`تم تسجيل تسوية ${settleAmount.toLocaleString()} د.ج بنجاح`);
+      showToast(`تم تسجيل تسوية ${formatNumber(settleAmount)} د.ج بنجاح`);
     }
 
     function deleteDebt(id) {
@@ -1932,8 +1981,8 @@
                 <div class="progress-bar-fill" style="width: ${percentage}%;"></div>
               </div>
               <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); margin-top: 8px;">
-                <span>تم توفير: ${item.currentAmount.toLocaleString()} د.ج</span>
-                <span>الهدف: ${item.targetAmount.toLocaleString()} د.ج</span>
+                <span>تم توفير: ${formatNumber(item.currentAmount)} د.ج</span>
+                <span>الهدف: ${formatNumber(item.targetAmount)} د.ج</span>
               </div>
               <div style="margin-top: 10px; display: flex; gap: 8px;">
                 <button class="btn btn-secondary btn-sm" onclick="addFundsToGoal(${item.id})">+ إضافة مبلغ للتوفير</button>
@@ -1946,7 +1995,7 @@
             <div class="card" style="margin-bottom: 10px; border-color: rgba(52, 152, 219, 0.3);">
               <div class="card-title">
                 <span>💳 قسط: ${item.name}</span>
-                <span style="color: var(--info);">${item.monthlyDeduction.toLocaleString()} د.ج / شهر</span>
+                <span style="color: var(--info);">${formatNumber(item.monthlyDeduction)} د.ج / شهر</span>
               </div>
               <div style="font-size: 0.85rem; color: var(--text-muted);">
                 الأشهر المتبقية: <strong>${item.remainingMonths} أشهر</strong>
@@ -2020,7 +2069,7 @@
               <div class="list-item-subtitle">تقتطع يوم ${f.dayOfMonth} من كل شهر</div>
             </div>
             <div class="list-item-amount">
-              ${f.amount.toLocaleString()} د.ج
+              ${formatNumber(f.amount)} د.ج
             </div>
             <button class="btn btn-secondary btn-sm" onclick="deleteFixedExpense(${f.id})">🗑️</button>
           </div>
@@ -2159,41 +2208,122 @@
     }
 
     function openIncomeModal() {
+      const dateEl = document.getElementById('income-date-input');
+      if (dateEl) dateEl.value = new Date().toISOString().slice(0, 10);
+      document.getElementById('income-amount-input').value = '';
+      document.getElementById('income-note-input').value = '';
       openModal('modal-income');
     }
 
     function saveIncome() {
       const amount = parseInt(document.getElementById('income-amount-input').value, 10);
+      const note = document.getElementById('income-note-input').value.trim() || 'دخل / راتب جديد';
+      const dateVal = document.getElementById('income-date-input').value;
+      const txDate = dateVal ? new Date(dateVal + 'T' + new Date().toTimeString().slice(0,8)).toISOString() : new Date().toISOString();
+
       if (amount && amount > 0) {
         appState.settings.incomeTotal = (appState.settings.incomeTotal || 0) + amount;
+        
+        // Record as an income transaction
+        appState.transactions.unshift({
+          id: Date.now(),
+          amount: amount,
+          type: 'income',
+          categoryId: 'misc',
+          note: note,
+          timestamp: txDate
+        });
+
         saveState();
         closeModal('modal-income');
+        showToast(`تم إضافة دخل بقيمة ${formatNumber(amount)} د.ج للميزانية`);
+      } else {
+        alert('الرجاء إدخال مبلغ صحيح');
+      }
+    }
+
+    function updateDebtModalLabel() {
+      const type = document.getElementById('debt-type-select').value;
+      const affectLabel = document.getElementById('debt-affect-label');
+      if (type === 'i_owe') {
+        affectLabel.innerText = 'إضافة هذا المبلغ المأخوذ فوراً إلى الميزانية (الرصيد المتوفر كـ دخل)';
+      } else {
+        affectLabel.innerText = 'خصم هذا المبلغ الممنوح فوراً من الميزانية (الرصيد المتوفر كـ مصروف)';
       }
     }
 
     function openAddDebtModal() {
+      const dateEl = document.getElementById('debt-date-input');
+      if (dateEl) dateEl.value = new Date().toISOString().slice(0, 10);
+      document.getElementById('debt-person-input').value = '';
+      document.getElementById('debt-amount-input').value = '';
+      document.getElementById('debt-notes-input').value = '';
+      document.getElementById('debt-affect-budget').checked = true;
+      updateDebtModalLabel();
       openModal('modal-debt');
     }
 
     function saveDebt() {
       const person = document.getElementById('debt-person-input').value.trim();
       const amount = parseInt(document.getElementById('debt-amount-input').value, 10);
-      const type = document.getElementById('debt-type-select').value;
+      const type = document.getElementById('debt-type-select').value; // 'i_owe' or 'owed_to_me'
       const notes = document.getElementById('debt-notes-input').value.trim();
+      const dateVal = document.getElementById('debt-date-input').value;
+      const affectBudget = document.getElementById('debt-affect-budget').checked;
+      const debtDate = dateVal ? new Date(dateVal + 'T' + new Date().toTimeString().slice(0,8)).toISOString() : new Date().toISOString();
 
-      if (person && amount > 0) {
-        appState.debts.unshift({
-          id: Date.now(),
-          personName: person,
-          amount: amount,
-          type: type,
-          notes: notes,
-          status: 'pending',
-          date: new Date().toISOString()
-        });
-        saveState();
-        closeModal('modal-debt');
+      if (!person) {
+        alert('الرجاء إدخال اسم الشخص أو الجهة');
+        return;
       }
+
+      if (!amount || amount <= 0) {
+        alert('الرجاء إدخال مبلغ دين صحيح');
+        return;
+      }
+
+      const newDebt = {
+        id: Date.now(),
+        personName: person,
+        amount: amount,
+        paidAmount: 0,
+        type: type,
+        notes: notes,
+        status: 'pending',
+        date: debtDate
+      };
+
+      appState.debts.unshift(newDebt);
+
+      // Link directly with primary budget if checked
+      if (affectBudget) {
+        if (type === 'i_owe') {
+          // Borrowing a new debt -> money enters pocket -> adds to budget as income
+          appState.settings.incomeTotal = (appState.settings.incomeTotal || 0) + amount;
+          appState.transactions.unshift({
+            id: Date.now() + 1,
+            amount: amount,
+            type: 'income',
+            categoryId: 'misc',
+            note: `استلاف دين جديد من: ${person}`,
+            timestamp: debtDate
+          });
+        } else {
+          // Giving a loan to a friend -> money leaves pocket -> reduces budget as expense
+          appState.transactions.unshift({
+            id: Date.now() + 1,
+            amount: amount,
+            type: 'expense',
+            categoryId: 'misc',
+            note: `إقراض/إعطاء دين لـ: ${person}`,
+            timestamp: debtDate
+          });
+        }
+      }
+
+      saveState();
+      closeModal('modal-debt');
+      showToast(`تم تسديد/تسجيل الدين بقيمة ${formatNumber(amount)} د.ج بنجاح`);
     }
 
     function openAddGoalModal() { openModal('modal-goal'); }
