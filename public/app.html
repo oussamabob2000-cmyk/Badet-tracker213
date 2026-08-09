@@ -1183,6 +1183,36 @@
     </div>
   </div>
 
+  <!-- MODAL: SETTLE DEBT (PARTIAL OR FULL) -->
+  <div id="modal-settle-debt" class="modal-overlay">
+    <div class="modal-container">
+      <div class="modal-header">
+        <div class="modal-title" id="settle-debt-title">تسوية الدين</div>
+        <button class="close-btn" onclick="closeModal('modal-settle-debt')">&times;</button>
+      </div>
+      <input type="hidden" id="settle-debt-id">
+      
+      <div id="settle-debt-summary" class="card" style="background: rgba(255, 255, 255, 0.04); padding: 14px; margin-bottom: 16px; font-size: 0.9rem; border-color: rgba(255, 255, 255, 0.1);">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">المبلغ المراد تسديده/تحصيله الآن (د.ج)</label>
+        <input type="number" id="settle-debt-amount-input" class="input-field" placeholder="أدخل المبلغ">
+      </div>
+
+      <div class="form-group" style="display: flex; gap: 8px; margin-bottom: 14px;">
+        <button type="button" class="btn btn-secondary btn-sm" style="flex: 1;" onclick="setSettleFullAmount()">تسوية كل المتبقي بالكامل</button>
+      </div>
+
+      <div class="form-group" style="display: flex; align-items: center; gap: 10px; margin-bottom: 18px; font-size: 0.85rem; color: var(--text-main);">
+        <input type="checkbox" id="settle-debt-affect-budget" checked style="width: 18px; height: 18px; accent-color: #2ECC71; cursor: pointer;">
+        <label for="settle-debt-affect-budget" style="cursor: pointer;" id="settle-debt-affect-label">خصم هذا المبلغ تلقائياً من الميزانية (الرصيد المتوفر)</label>
+      </div>
+
+      <button class="btn btn-primary" style="width: 100%;" onclick="confirmSettleDebt()">تأكيد عملية التسوية</button>
+    </div>
+  </div>
+
   <!-- MODAL: ADD GOAL -->
   <div id="modal-goal" class="modal-overlay">
     <div class="modal-container">
@@ -1618,16 +1648,17 @@
       }
 
       container.innerHTML = list.map(t => {
+        const isIncome = t.type === 'income';
         const cat = appState.categories.find(c => c.id === t.categoryId) || { icon: '📦', name: 'متفرقات' };
         return `
           <div class="list-item">
-            <div style="font-size: 1.4rem;">${cat.icon}</div>
+            <div style="font-size: 1.4rem;">${isIncome ? '💰' : cat.icon}</div>
             <div class="list-item-info">
-              <div class="list-item-title">${cat.name} ${t.note ? `<span style="font-size:0.8rem; font-weight:normal; color:var(--text-muted);">- ${t.note}</span>` : ''}</div>
+              <div class="list-item-title">${isIncome ? 'دخل / استلام' : cat.name} ${t.note ? `<span style="font-size:0.8rem; font-weight:normal; color:var(--text-muted);">- ${t.note}</span>` : ''}</div>
               <div class="list-item-subtitle">${formatRelativeTime(t.timestamp)}</div>
             </div>
-            <div class="list-item-amount" style="color: var(--danger)">
-              -${t.amount.toLocaleString()} د.ج
+            <div class="list-item-amount" style="color: ${isIncome ? 'var(--primary)' : 'var(--danger)'}">
+              ${isIncome ? '+' : '-'}${t.amount.toLocaleString()} د.ج
             </div>
             <button class="btn btn-secondary btn-sm" onclick="deleteTransaction(${t.id})" style="padding: 4px 8px; font-size: 0.75rem;">🗑️</button>
           </div>
@@ -1636,7 +1667,11 @@
     }
 
     function deleteTransaction(id) {
-      if (confirm('هل أنت تأكد من حذف هذا المصروف؟')) {
+      if (confirm('هل أنت تأكد من حذف هذه العملية؟')) {
+        const tx = appState.transactions.find(t => t.id === id);
+        if (tx && tx.type === 'income') {
+          appState.settings.incomeTotal = Math.max(0, (appState.settings.incomeTotal || 0) - tx.amount);
+        }
         appState.transactions = appState.transactions.filter(t => t.id !== id);
         saveState();
       }
@@ -1706,30 +1741,161 @@
 
       container.innerHTML = list.map(d => {
         const isOwe = d.type === 'i_owe';
-        const isSettled = d.status === 'settled';
+        const paidAmount = d.paidAmount || (d.status === 'settled' ? d.amount : 0);
+        const remainingAmount = Math.max(0, d.amount - paidAmount);
+        const isSettled = d.status === 'settled' || remainingAmount === 0;
+        const isPartiallyPaid = paidAmount > 0 && remainingAmount > 0;
+        const percent = Math.min(100, Math.round((paidAmount / d.amount) * 100));
 
         return `
-          <div class="list-item">
-            <div class="list-item-info">
-              <div class="list-item-title">${d.personName} ${isSettled ? '<span class="badge-dzd" style="background:var(--primary-bg); color:var(--primary)">تمت التسوية</span>' : ''}</div>
-              <div class="list-item-subtitle">${d.notes || 'بدون ملاحظات'} • ${new Date(d.date).toLocaleDateString('ar-EG')}</div>
+          <div class="list-item" style="flex-direction: column; align-items: stretch; gap: 10px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+              <div class="list-item-info">
+                <div class="list-item-title" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                  <span>${d.personName}</span>
+                  ${isSettled 
+                    ? '<span class="badge-dzd" style="background:rgba(46, 204, 113, 0.15); color:var(--primary); font-size:0.75rem; padding: 2px 8px;">مكتمل المسدد ✓</span>' 
+                    : (isPartiallyPaid 
+                        ? `<span class="badge-dzd" style="background:rgba(245, 158, 11, 0.15); color:var(--warning); font-size:0.75rem; padding: 2px 8px;">مسدد جزئياً (${percent}%)</span>`
+                        : '<span class="badge-dzd" style="background:rgba(239, 68, 68, 0.12); color:var(--danger); font-size:0.75rem; padding: 2px 8px;">غير مسدد</span>')
+                  }
+                </div>
+                <div class="list-item-subtitle">${d.notes || 'بدون ملاحظات'} • ${new Date(d.date).toLocaleDateString('ar-EG')}</div>
+              </div>
+              <div class="list-item-amount" style="text-align: left; color: ${isOwe ? 'var(--danger)' : 'var(--primary)'}">
+                ${d.amount.toLocaleString()} د.ج
+              </div>
             </div>
-            <div class="list-item-amount" style="color: ${isOwe ? 'var(--danger)' : 'var(--primary)'}">
-              ${d.amount.toLocaleString()} د.ج
+
+            ${(isPartiallyPaid || isSettled) ? `
+              <div style="background: rgba(255,255,255,0.03); padding: 8px 12px; border-radius: var(--radius-sm); font-size: 0.8rem; border: 1px solid rgba(255,255,255,0.06);">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                  <span style="color: var(--text-muted)">المسدد: ${paidAmount.toLocaleString()} د.ج</span>
+                  <span style="font-weight: 700; color: ${isSettled ? 'var(--primary)' : 'var(--warning)'}">المتبقي: ${remainingAmount.toLocaleString()} د.ج</span>
+                </div>
+                <div class="progress-bar-bg" style="height: 5px;">
+                  <div class="progress-bar-fill" style="width: ${percent}%; background: ${isSettled ? 'var(--primary)' : 'var(--warning)'};"></div>
+                </div>
+              </div>
+            ` : ''}
+
+            <div style="display: flex; justify-content: flex-end; gap: 8px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 8px; margin-top: 2px;">
+              ${!isSettled ? `<button class="btn btn-primary btn-sm" onclick="openSettleDebtModal(${d.id})">🤝 تسوية / تسديد جزء</button>` : ''}
+              <button class="btn btn-secondary btn-sm" onclick="deleteDebt(${d.id})">🗑️ حذف</button>
             </div>
-            ${!isSettled ? `<button class="btn btn-primary btn-sm" onclick="settleDebt(${d.id})">تسوية</button>` : ''}
-            <button class="btn btn-secondary btn-sm" onclick="deleteDebt(${d.id})">🗑️</button>
           </div>
         `;
       }).join('');
     }
 
-    function settleDebt(id) {
+    let currentSettleDebt = null;
+
+    function openSettleDebtModal(id) {
       const d = appState.debts.find(x => x.id === id);
-      if (d && confirm(`هل تريد تأكيد تسوية الدين مع (${d.personName}) بقيمة ${d.amount.toLocaleString()} د.ج؟`)) {
-        d.status = 'settled';
-        saveState();
+      if (!d) return;
+
+      currentSettleDebt = d;
+      const paidAmount = d.paidAmount || (d.status === 'settled' ? d.amount : 0);
+      const remainingAmount = Math.max(0, d.amount - paidAmount);
+
+      document.getElementById('settle-debt-id').value = id;
+      document.getElementById('settle-debt-title').innerText = d.type === 'i_owe' ? `تسديد دين (عليّ) - ${d.personName}` : `تحصيل دين (لي) - ${d.personName}`;
+      
+      const summaryBox = document.getElementById('settle-debt-summary');
+      summaryBox.innerHTML = `
+        <div style="font-weight: 700; font-size: 1rem; margin-bottom: 6px; color: var(--text-main);">الشخص: ${d.personName}</div>
+        <div style="display: flex; justify-content: space-between; color: var(--text-muted); font-size: 0.85rem;">
+          <span>المبلغ الكلي للدين:</span>
+          <span>${d.amount.toLocaleString()} د.ج</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; color: var(--text-muted); font-size: 0.85rem; margin-top: 2px;">
+          <span>المسدد سابقاً:</span>
+          <span>${paidAmount.toLocaleString()} د.ج</span>
+        </div>
+        <div style="margin-top: 8px; padding-top: 8px; border-top: 1px dashed rgba(255,255,255,0.12); display: flex; justify-content: space-between; font-weight: 700; color: ${d.type === 'i_owe' ? '#F87171' : 'var(--primary)'};">
+          <span>المبلغ المتبقي للتسوية:</span>
+          <span>${remainingAmount.toLocaleString()} د.ج</span>
+        </div>
+      `;
+
+      const inputField = document.getElementById('settle-debt-amount-input');
+      inputField.value = remainingAmount;
+
+      const affectLabel = document.getElementById('settle-debt-affect-label');
+      if (d.type === 'i_owe') {
+        affectLabel.innerText = 'خصم هذا المبلغ من الميزانية (الرصيد المتوفر كـ مصروف)';
+      } else {
+        affectLabel.innerText = 'إضافة هذا المبلغ للميزانية (الرصيد المتوفر كـ دخل)';
       }
+
+      document.getElementById('settle-debt-affect-budget').checked = true;
+
+      openModal('modal-settle-debt');
+    }
+
+    function setSettleFullAmount() {
+      if (!currentSettleDebt) return;
+      const paidAmount = currentSettleDebt.paidAmount || (currentSettleDebt.status === 'settled' ? currentSettleDebt.amount : 0);
+      const remainingAmount = Math.max(0, currentSettleDebt.amount - paidAmount);
+      document.getElementById('settle-debt-amount-input').value = remainingAmount;
+    }
+
+    function confirmSettleDebt() {
+      if (!currentSettleDebt) return;
+
+      const settleAmount = parseInt(document.getElementById('settle-debt-amount-input').value, 10);
+      const affectBudget = document.getElementById('settle-debt-affect-budget').checked;
+
+      const paidAmount = currentSettleDebt.paidAmount || (currentSettleDebt.status === 'settled' ? currentSettleDebt.amount : 0);
+      const remainingAmount = Math.max(0, currentSettleDebt.amount - paidAmount);
+
+      if (!settleAmount || settleAmount <= 0) {
+        alert('الرجاء إدخال مبلغ تسوية صحيح أكبر من 0');
+        return;
+      }
+
+      if (settleAmount > remainingAmount) {
+        alert(`تنبيه: المبلغ المدخل (${settleAmount.toLocaleString()} د.ج) أكبر من الدين المتبقي (${remainingAmount.toLocaleString()} د.ج)`);
+        return;
+      }
+
+      currentSettleDebt.paidAmount = paidAmount + settleAmount;
+      if (currentSettleDebt.paidAmount >= currentSettleDebt.amount) {
+        currentSettleDebt.paidAmount = currentSettleDebt.amount;
+        currentSettleDebt.status = 'settled';
+      } else {
+        currentSettleDebt.status = 'partially_paid';
+      }
+
+      // Record in Budget / Available Balance
+      if (affectBudget) {
+        if (currentSettleDebt.type === 'i_owe') {
+          // Money paid out -> Expense transaction -> reduces remaining budget
+          appState.transactions.unshift({
+            id: Date.now(),
+            amount: settleAmount,
+            type: 'expense',
+            categoryId: 'misc',
+            note: `تسديد دين لـ: ${currentSettleDebt.personName}`,
+            timestamp: new Date().toISOString()
+          });
+        } else {
+          // Money received -> Income -> increases available balance
+          appState.settings.incomeTotal = (appState.settings.incomeTotal || 0) + settleAmount;
+          appState.transactions.unshift({
+            id: Date.now(),
+            amount: settleAmount,
+            type: 'income',
+            categoryId: 'misc',
+            note: `استلام دين من: ${currentSettleDebt.personName}`,
+            timestamp: new Date().toISOString()
+          });
+        }
+      }
+
+      saveState();
+      closeModal('modal-settle-debt');
+      showToast(`تم تسجيل تسوية ${settleAmount.toLocaleString()} د.ج بنجاح`);
     }
 
     function deleteDebt(id) {
